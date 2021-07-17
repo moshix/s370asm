@@ -1,0 +1,4 @@
+#!/bin/bash
+python3 /Users/moshe/s370asm//S370BALEmulator.py $1 
+echo "execution of emulator ended"
+exit
