@@ -1,0 +1,119 @@
+*         PRINT ON,NOGEN
+*REPORT   CSECT
+         BALR  R12,0                              SET UP MY                       
+         USING *,R12                              BASE REGISTER         
+*        ST    R13,SAVEA+4                        ENSURE SAVE AREA                
+*        LA    R13,SAVEA                          CHAIN BUILT CORRECTLY. 
+*---------------------------------------------------------------------*
+INOPEN   LA    R0,FNAMEI
+         L     R1,FSPECI
+         SVC   249
+OUOPEN   LA    R0,FNAMEO
+         L     R1,FSPECO
+         SVC   249
+*---------------------------------------------------------------------*
+*READREC GET   INDCB,PAYREC                      READ IN EMPLOYEE REC
+READREC  LA    R0,PAYREC
+         L     R1,FSPECI
+         SVC   247
+IFEOF    C     R15,=F'0'                          IF EOF THEN
+         BE    INCLOS                             GO TO CLOSING
+*---------------------------------------------------------------------*
+* PRINT ALSO ON SCREEN 
+         LA    R0,PAYREC
+         LR    R1,R15
+         SVC   255                                OUTPUT ON SCREEN
+* 
+CPYSTUFF MVC   PEMPID,EMPID                                            
+         MVC   PEMPLOYE,EMPLOYEE                                       
+         MVC   PSALARY,SALARY                                          
+*                                                                      
+PACKIT   PACK  ZSALARY,SALARY                     PACK SALARY                     
+         AP    ZTOTSAL,ZSALARY                    ADD MONTHLY WAGE TO
+*WRITEPR  PUT   OUTDCB,OUTAREA                    WRITE TO PRINTER
+WRITEPR  LA    R0,OUTAREA
+         L     R1,FSPECO
+         IC    R1,OUTAREAL       
+         SVC   246                                 PUT RECORD TO PC FI
+         B     READREC                             AND REPEAT TILL FILE
+*---------------------------------------------------------------------*
+INCLOS   MVC   ATOTAL,EDWD                                              
+*        LA    R1,ATOTAL                                                
+         ED    ATOTAL,ZTOTSAL                                           
+*        PUT   OUTDCB,TOTALLNE                    PRINT TOTAL LINE
+         LA    R0,TOTALLNE
+         L     R1,FSPECO
+         IC    R1,TOTALLNL   
+         SVC   246                                PUT TOTALLINE
+* PRINT TOTAL ALSO ON SCREEN
+         LA    R0,TOTALLNE
+*        LR    R1,R15
+         SVC   255
+*CLSALL   CLOSE (INDCB,,OUTDCB)                   WE GET HERE FROM EODAD
+CLSALL   L     R1,FSPECI
+         SVC   248                                CLOSE PC FILE SVC
+         L     R1,FSPECO
+         SVC   248
+*                                      FOR END OF BLOCK ON WGET BUT OK 
+*                                                  TO ALSO CLOSE OUTDCB
+         BR    R14
+*         LTORG                                                         
+*---------------------------------------------------------------------*
+*INDCB    DCB MACRF=GM,DDNAME=INDD,DSORG=PS,EODAD=INCLOS                
+*OUTDCB   DCB MACRF=PM,DDNAME=OUTDD,DSORG=PS                            
+*                          PAYROLL REPORT STRUCTURE                    
+PAYREC   DS    0CL80                              HANDLE FOR THE STRU
+EMPID    DS    CL4                                EMPLOYEE ID                                 
+         DS    CL6                                FILLER TO POSITION10                       
+EMPLOYEE DS    CL21                               NAME OF EMPLOYEE                            
+         DS    CL2                                FILLER TO POSITION34                       
+SALARY   DS    CL4                                MONTHLY SALARY                              
+TOEND    DS    CL43                               80 BYTES SO FAR                             
+*--------S-T-A-R-T----O-F----O-U-T-P-U-T----S-T-R-U-C-T-U-R-E---------*
+PTITLE   DC    CL121' P A Y R O L L  R E P O R T  -  B I M  C O R P.'  
+OUTAREA  DS    0CL133
+EMPTY    DC    CL1' '                                                  
+PEMPID   DC    CL4' '                                                  
+         DC    CL6' '                                                  
+PEMPLOYE DC    CL20' '                                                 
+         DC    CL2' '                                                  
+PDOLLAR  DC    CL1' '                                                  
+PSALARY  DC    CL5' '                                                  
+OFILLER  DC    CL94' '                                                 
+*                                                                      
+ZSALARY  DC    PL3'0'                             INITIALIZE SLARY PAC
+ZTOTSAL  DC    PL05'0'                            INITIALIZE TOTAL WA
+EDWD     DC    X'402020202020206B202020'
+TOTALLNE DS    0CL133                                                  
+SKIP     DC    CL1'0'                                                  
+TFILL1   DC    CL09' '                                                 
+TFILL2   DC    CL15' '                                                 
+TDOLLAR  DC    CL1'$'                                                  
+ATOTAL   DC    CL11' '                                                 
+TFILL3   DC    CL5' '                                                 
+TOTMSG   DC    CL61'TOTAL MONTHLY WAGES'                               
+TFILL4   DC    CL30' '  
+* FILE SPECS
+TOTALLNL EQU   *  
+OUTAREAL DC    XL1'85'                                             
+FSPECI   DC    XL4'0100000E'
+FNAMEI   DC    CL14'SALARIES.INPUT'
+FSPECO   DC    XL4'0201000D'
+FNAMEO   DC    CL13'REPORT.OUTPUT'
+R0       EQU   0                                                       
+R1       EQU   1                                                       
+R2       EQU   2                                                       
+R3       EQU   3                                                       
+R4       EQU   4                                                       
+R5       EQU   5                                                       
+R6       EQU   6                                                       
+R7       EQU   7                                                       
+R8       EQU   8                                                       
+R9       EQU   9                                                       
+R10      EQU   10                                                      
+R11      EQU   11                                                      
+R12      EQU   12                                                      
+R13      EQU   13                                                      
+R14      EQU   14                                                      
+R15      EQU   15                                                      
+         END                                                           
