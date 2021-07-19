@@ -46,6 +46,26 @@ then run with the script runasm script, after adpating for your directory struct
  Macro definitions are NOT supported.
  
 
+Example program
+==============
+
+         BALR  R12,0 
+         USING *,R12
+         LA    R3,AREA1
+         LA    R4,4
+LOOP     MVI   0(R3),C'0'
+         LA    R3,1(,R3)
+         BCT   R4,LOOP
+         LA    R15,0
+         BR    R14
+AREA1    DC    XL4'FFFFFFFF'
+R0       EQU   0
+...
+R15      EQU   15
+         END            
+
+
+
 
 Moshix
 
