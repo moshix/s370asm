@@ -22,6 +22,30 @@ assembe with the proviced asm script but first adapt to your directory structure
 
 then run with the script runasm script, after adpating for your directory structure. 
 
+ The first two statements in the source code MUST 
+ establish your base register as follows:
+
+ BALR  R12,0    (base reg can be anything you want) 
+ USING *,R12
+
+ Do NOT save registers 14-12 at beginning
+ or restore them at the end as you would normally do.
+
+ A branch to register 14 is required at the end
+ of your program (see the sample below). If you 
+ plan on using reg 14 in your program then you MUST
+ save it prior to using it, then restore it before
+ issuing the branch to reg 14 to exit.
+
+ Multiple base registers are NOT supported.
+
+ Currently DSECTs are NOT supported.
+
+ Conditional assembly is NOT supported.
+
+ Macro definitions are NOT supported.
+ 
+
 
 Moshix
 
