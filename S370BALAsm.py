@@ -20,9 +20,9 @@
 import sys
 import pickle
 #
-# global vars moshix july 17 2021
-asmver='1.10'
-reldate='July 17 2021'
+# global vars moshix july 19 2021
+asmver='1.11'
+reldate='July 19 2021'
 #
 #assembler directives
 assem_inst_list = [ 'USING', 
@@ -842,7 +842,7 @@ if len(sys.argv)-1 > 0:
     except IndexError:
         pass
 else:
-    print('s370 file name missing')
+    print('s370 file name missing. Invoke the assembler without .s370 extension in the argument')
     exit(1)
         
 #open the source code file and create a list from assembler statements    
