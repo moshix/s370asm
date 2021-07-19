@@ -48,7 +48,7 @@ then run with the script runasm script, after adpating for your directory struct
 
 Example program
 ==============
-<pri>
+<pre>
          BALR  R12,0 
          USING *,R12
          LA    R3,AREA1
@@ -64,7 +64,7 @@ R0       EQU   0
 R15      EQU   15
          END            
 
-</pri>
+</pre>
 
 
 Moshix
