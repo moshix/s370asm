@@ -9,6 +9,20 @@ then I added some very small mods to the assembler and created a simple report w
 
 Great learning tool. Thank you Jim!
 
+
+How to use this assembler
+========================
+
+write your assembler program without saving / restoring the caller's registers on entry/exit. There are no macros, only SVCs (see 
+the report.s370 example). 
+
+All S/370 instructions are correclty assembled and emulated. 
+
+assembe with the proviced asm script but first adapt to your directory structure
+
+then run with the script runasm script, after adpating for your directory structure. 
+
+
 Moshix
 
 July 17, 2021
