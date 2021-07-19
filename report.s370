@@ -11,6 +11,13 @@ INOPEN   LA    R0,FNAMEI
 OUOPEN   LA    R0,FNAMEO
          L     R1,FSPECO
          SVC   249
+* WRITE OUTPUT RECORD
+WTITLE   LA    R0,PTITLE
+         L     R1,FSPECO
+         IC    R1,121                              ***INSERT LEN TO BYTE 3 R1                        
+         SVC   246                                   ********
+         LA    R1,121                                ********PUT LEN IN R1
+         SVC   255                                   ********
 *---------------------------------------------------------------------*
 *READREC GET   INDCB,PAYREC                      READ IN EMPLOYEE REC
 READREC  LA    R0,PAYREC
@@ -47,7 +54,7 @@ INCLOS   MVC   ATOTAL,EDWD
          SVC   246                                PUT TOTALLINE
 * PRINT TOTAL ALSO ON SCREEN
          LA    R0,TOTALLNE
-*        LR    R1,R15
+         LA    R1,133                             ******** PUT LEN IN R1
          SVC   255
 *CLSALL   CLOSE (INDCB,,OUTDCB)                   WE GET HERE FROM EODAD
 CLSALL   L     R1,FSPECI

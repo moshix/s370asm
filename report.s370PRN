@@ -7,116 +7,123 @@ S370Asm Assembler         v1.10                         July 17 2021            
 000000                                                  *        ST    R13,SAVEA+4                        ENSURE SAVE AREA                
 000000                                                  *        LA    R13,SAVEA                          CHAIN BUILT CORRECTLY. 
 000000                                                  *---------------------------------------------------------------------*
-000002 4100C277                                         INOPEN   LA    R0,FNAMEI
-000006 5810C273                                                  L     R1,FSPECI
+000002 4100C28F                                         INOPEN   LA    R0,FNAMEI
+000006 5810C28B                                                  L     R1,FSPECI
 00000A 0AF9                                                      SVC   249
-00000C 4100C289                                         OUOPEN   LA    R0,FNAMEO
-000010 5810C285                                                  L     R1,FSPECO
+00000C 4100C2A1                                         OUOPEN   LA    R0,FNAMEO
+000010 5810C29D                                                  L     R1,FSPECO
 000014 0AF9                                                      SVC   249
-000014                                                  *---------------------------------------------------------------------*
-000014                                                  *READREC GET   INDCB,PAYREC                      READ IN EMPLOYEE REC
-000016 4100C08C                                         READREC  LA    R0,PAYREC
-00001A 5810C273                                                  L     R1,FSPECI
-00001E 0AF7                                                      SVC   247
-000020 59F0C296                                         IFEOF    C     R15,LT001
-000024 4780C05E                                                  BC     8,INCLOS                             GO TO CLOSING
-000024                                                  *---------------------------------------------------------------------*
-000024                                                  * PRINT ALSO ON SCREEN 
-000028 4100C08C                                                  LA    R0,PAYREC
-00002C 181F                                                      LR    R1,R15
-00002E 0AFF                                                      SVC   255                                OUTPUT ON SCREEN
-00002E                                                  * 
-000030 D203C156C08C                                     CPYSTUFF MVC   PEMPID,EMPID                                            
-000036 D213C160C096                                              MVC   PEMPLOYE,EMPLOYEE                                       
-00003C D204C177C0AD                                              MVC   PSALARY,SALARY                                          
-00003C                                                  *                                                                      
-000042 F223C1DAC0AD                                     PACKIT   PACK  ZSALARY,SALARY                     PACK SALARY                     
-000048 FA42C1DDC1DA                                              AP    ZTOTSAL,ZSALARY                    ADD MONTHLY WAGE TO
-000048                                                  *WRITEPR  PUT   OUTDCB,OUTAREA                    WRITE TO PRINTER
-00004E 4100C155                                         WRITEPR  LA    R0,OUTAREA
-000052 5810C285                                                  L     R1,FSPECO
-000056 4310C272                                                  IC    R1,OUTAREAL       
-00005A 0AF6                                                      SVC   246                                 PUT RECORD TO PC FI
-00005C 47F0C014                                                  BC     15,READREC                             AND REPEAT TILL FILE
-00005C                                                  *---------------------------------------------------------------------*
-000060 D20AC207C1E2                                     INCLOS   MVC   ATOTAL,EDWD                                              
-000060                                                  *        LA    R1,ATOTAL                                                
-000066 DE0AC207C1DD                                              ED    ATOTAL,ZTOTSAL                                           
-000066                                                  *        PUT   OUTDCB,TOTALLNE                    PRINT TOTAL LINE
-00006C 4100C1ED                                                  LA    R0,TOTALLNE
-000070 5810C285                                                  L     R1,FSPECO
-000074 4310C272                                                  IC    R1,TOTALLNL   
-000078 0AF6                                                      SVC   246                                PUT TOTALLINE
-000078                                                  * PRINT TOTAL ALSO ON SCREEN
-00007A 4100C1ED                                                  LA    R0,TOTALLNE
-00007A                                                  *        LR    R1,R15
-00007E 0AFF                                                      SVC   255
-00007E                                                  *CLSALL   CLOSE (INDCB,,OUTDCB)                   WE GET HERE FROM EODAD
-000080 5810C273                                         CLSALL   L     R1,FSPECI
-000084 0AF8                                                      SVC   248                                CLOSE PC FILE SVC
-000086 5810C285                                                  L     R1,FSPECO
-00008A 0AF8                                                      SVC   248
-00008A                                                  *                                      FOR END OF BLOCK ON WGET BUT OK 
-00008A                                                  *                                                  TO ALSO CLOSE OUTDCB
-00008C 07FE                                                      BCR    15,R14
-00008C                                                  *         LTORG                                                         
-00008C                                                  *---------------------------------------------------------------------*
-00008C                                                  *INDCB    DCB MACRF=GM,DDNAME=INDD,DSORG=PS,EODAD=INCLOS                
-00008C                                                  *OUTDCB   DCB MACRF=PM,DDNAME=OUTDD,DSORG=PS                            
-00008C                                                  *                          PAYROLL REPORT STRUCTURE                    
-00008E                                                  PAYREC   DS    0CL80                              HANDLE FOR THE STRU
-00008E 40404040                                         EMPID    DS    CL4                                EMPLOYEE ID                                 
-000092 404040404040                                              DS    CL6                                FILLER TO POSITION10                       
-000098 404040404040404040404040404040404040404040       EMPLOYEE DS    CL21                               NAME OF EMPLOYEE                            
-0000AD 4040                                                      DS    CL2                                FILLER TO POSITION34                       
-0000AF 40404040                                         SALARY   DS    CL4                                MONTHLY SALARY                              
-0000B3 4040404040404040404040404040404040404040404040   TOEND    DS    CL43                               80 BYTES SO FAR                             
-0000B3                                                  *--------S-T-A-R-T----O-F----O-U-T-P-U-T----S-T-R-U-C-T-U-R-E---------*
-0000DE 40D740C140E840D940D640D340D34040D940C540D740D6   PTITLE   DC    CL121' P A Y R O L L  R E P O R T  -  B I M  C O R P.'  
-000157                                                  OUTAREA  DS    0CL133
-000157 40                                               EMPTY    DC    CL1' '                                                  
-000158 40404040                                         PEMPID   DC    CL4' '                                                  
-00015C 404040404040                                              DC    CL6' '                                                  
-000162 4040404040404040404040404040404040404040         PEMPLOYE DC    CL20' '                                                 
-000176 4040                                                      DC    CL2' '                                                  
-000178 40                                               PDOLLAR  DC    CL1' '                                                  
-000179 4040404040                                       PSALARY  DC    CL5' '                                                  
-00017E 4040404040404040404040404040404040404040404040   OFILLER  DC    CL94' '                                                 
-00017E                                                  *                                                                      
-0001DC 00000C                                           ZSALARY  DC    PL3'0'                             INITIALIZE SLARY PAC
-0001DF 000000000C                                       ZTOTSAL  DC    PL05'0'                            INITIALIZE TOTAL WA
-0001E4 402020202020206B202020                           EDWD     DC    X'402020202020206B202020'
-0001EF                                                  TOTALLNE DS    0CL133                                                  
-0001EF F0                                               SKIP     DC    CL1'0'                                                  
-0001F0 404040404040404040                               TFILL1   DC    CL09' '                                                 
-0001F9 404040404040404040404040404040                   TFILL2   DC    CL15' '                                                 
-000208 5B                                               TDOLLAR  DC    CL1'$'                                                  
-000209 4040404040404040404040                           ATOTAL   DC    CL11' '                                                 
-000214 4040404040                                       TFILL3   DC    CL5' '                                                 
-000219 E3D6E3C1D340D4D6D5E3C8D3E840E6C1C7C5E240404040   TOTMSG   DC    CL61'TOTAL MONTHLY WAGES'                               
-000256 4040404040404040404040404040404040404040404040   TFILL4   DC    CL30' '  
-000256                                                  * FILE SPECS
-000256                                                  TOTALLNL EQU   *  
-000274 85                                               OUTAREAL DC    XL1'85'                                             
-000275 0100000E                                         FSPECI   DC    XL4'0100000E'
-000279 E2C1D3C1D9C9C5E24BC9D5D7E4E3                     FNAMEI   DC    CL14'SALARIES.INPUT'
-000287 0201000D                                         FSPECO   DC    XL4'0201000D'
-00028B D9C5D7D6D9E34BD6E4E3D7E4E3                       FNAMEO   DC    CL13'REPORT.OUTPUT'
-00028B                                                  R0       EQU   0                                                       
-00028B                                                  R1       EQU   1                                                       
-00028B                                                  R2       EQU   2                                                       
-00028B                                                  R3       EQU   3                                                       
-00028B                                                  R4       EQU   4                                                       
-00028B                                                  R5       EQU   5                                                       
-00028B                                                  R6       EQU   6                                                       
-00028B                                                  R7       EQU   7                                                       
-00028B                                                  R8       EQU   8                                                       
-00028B                                                  R9       EQU   9                                                       
-00028B                                                  R10      EQU   10                                                      
-00028B                                                  R11      EQU   11                                                      
-00028B                                                  R12      EQU   12                                                      
-00028B                                                  R13      EQU   13                                                      
-00028B                                                  R14      EQU   14                                                      
-00028B                                                  R15      EQU   15                                                      
-000298 00000000                                         LT001    DC    F'0'
-000298                                                           END                                                           
+000014                                                  * WRITE OUTPUT RECORD
+000016 4100C0F4                                         WTITLE   LA    R0,PTITLE
+00001A 5810C29D                                                  L     R1,FSPECO
+00001E 43100079                                                  IC    R1,121                              ***INSERT LEN TO BYTE 3 R1                        
+000022 0AF6                                                      SVC   246                                   ********
+000024 41100079                                                  LA    R1,121                                ********PUT LEN IN R1
+000028 0AFF                                                      SVC   255                                   ********
+000028                                                  *---------------------------------------------------------------------*
+000028                                                  *READREC GET   INDCB,PAYREC                      READ IN EMPLOYEE REC
+00002A 4100C0A4                                         READREC  LA    R0,PAYREC
+00002E 5810C28B                                                  L     R1,FSPECI
+000032 0AF7                                                      SVC   247
+000034 59F0C2AE                                         IFEOF    C     R15,LT001
+000038 4780C072                                                  BC     8,INCLOS                             GO TO CLOSING
+000038                                                  *---------------------------------------------------------------------*
+000038                                                  * PRINT ALSO ON SCREEN 
+00003C 4100C0A4                                                  LA    R0,PAYREC
+000040 181F                                                      LR    R1,R15
+000042 0AFF                                                      SVC   255                                OUTPUT ON SCREEN
+000042                                                  * 
+000044 D203C16EC0A4                                     CPYSTUFF MVC   PEMPID,EMPID                                            
+00004A D213C178C0AE                                              MVC   PEMPLOYE,EMPLOYEE                                       
+000050 D204C18FC0C5                                              MVC   PSALARY,SALARY                                          
+000050                                                  *                                                                      
+000056 F223C1F2C0C5                                     PACKIT   PACK  ZSALARY,SALARY                     PACK SALARY                     
+00005C FA42C1F5C1F2                                              AP    ZTOTSAL,ZSALARY                    ADD MONTHLY WAGE TO
+00005C                                                  *WRITEPR  PUT   OUTDCB,OUTAREA                    WRITE TO PRINTER
+000062 4100C16D                                         WRITEPR  LA    R0,OUTAREA
+000066 5810C29D                                                  L     R1,FSPECO
+00006A 4310C28A                                                  IC    R1,OUTAREAL       
+00006E 0AF6                                                      SVC   246                                 PUT RECORD TO PC FI
+000070 47F0C028                                                  BC     15,READREC                             AND REPEAT TILL FILE
+000070                                                  *---------------------------------------------------------------------*
+000074 D20AC21FC1FA                                     INCLOS   MVC   ATOTAL,EDWD                                              
+000074                                                  *        LA    R1,ATOTAL                                                
+00007A DE0AC21FC1F5                                              ED    ATOTAL,ZTOTSAL                                           
+00007A                                                  *        PUT   OUTDCB,TOTALLNE                    PRINT TOTAL LINE
+000080 4100C205                                                  LA    R0,TOTALLNE
+000084 5810C29D                                                  L     R1,FSPECO
+000088 4310C28A                                                  IC    R1,TOTALLNL   
+00008C 0AF6                                                      SVC   246                                PUT TOTALLINE
+00008C                                                  * PRINT TOTAL ALSO ON SCREEN
+00008E 4100C205                                                  LA    R0,TOTALLNE
+000092 41100085                                                  LA    R1,133                             ******** PUT LEN IN R1
+000096 0AFF                                                      SVC   255
+000096                                                  *CLSALL   CLOSE (INDCB,,OUTDCB)                   WE GET HERE FROM EODAD
+000098 5810C28B                                         CLSALL   L     R1,FSPECI
+00009C 0AF8                                                      SVC   248                                CLOSE PC FILE SVC
+00009E 5810C29D                                                  L     R1,FSPECO
+0000A2 0AF8                                                      SVC   248
+0000A2                                                  *                                      FOR END OF BLOCK ON WGET BUT OK 
+0000A2                                                  *                                                  TO ALSO CLOSE OUTDCB
+0000A4 07FE                                                      BCR    15,R14
+0000A4                                                  *         LTORG                                                         
+0000A4                                                  *---------------------------------------------------------------------*
+0000A4                                                  *INDCB    DCB MACRF=GM,DDNAME=INDD,DSORG=PS,EODAD=INCLOS                
+0000A4                                                  *OUTDCB   DCB MACRF=PM,DDNAME=OUTDD,DSORG=PS                            
+0000A4                                                  *                          PAYROLL REPORT STRUCTURE                    
+0000A6                                                  PAYREC   DS    0CL80                              HANDLE FOR THE STRU
+0000A6 40404040                                         EMPID    DS    CL4                                EMPLOYEE ID                                 
+0000AA 404040404040                                              DS    CL6                                FILLER TO POSITION10                       
+0000B0 404040404040404040404040404040404040404040       EMPLOYEE DS    CL21                               NAME OF EMPLOYEE                            
+0000C5 4040                                                      DS    CL2                                FILLER TO POSITION34                       
+0000C7 40404040                                         SALARY   DS    CL4                                MONTHLY SALARY                              
+0000CB 4040404040404040404040404040404040404040404040   TOEND    DS    CL43                               80 BYTES SO FAR                             
+0000CB                                                  *--------S-T-A-R-T----O-F----O-U-T-P-U-T----S-T-R-U-C-T-U-R-E---------*
+0000F6 40D740C140E840D940D640D340D34040D940C540D740D6   PTITLE   DC    CL121' P A Y R O L L  R E P O R T  -  B I M  C O R P.'  
+00016F                                                  OUTAREA  DS    0CL133
+00016F 40                                               EMPTY    DC    CL1' '                                                  
+000170 40404040                                         PEMPID   DC    CL4' '                                                  
+000174 404040404040                                              DC    CL6' '                                                  
+00017A 4040404040404040404040404040404040404040         PEMPLOYE DC    CL20' '                                                 
+00018E 4040                                                      DC    CL2' '                                                  
+000190 40                                               PDOLLAR  DC    CL1' '                                                  
+000191 4040404040                                       PSALARY  DC    CL5' '                                                  
+000196 4040404040404040404040404040404040404040404040   OFILLER  DC    CL94' '                                                 
+000196                                                  *                                                                      
+0001F4 00000C                                           ZSALARY  DC    PL3'0'                             INITIALIZE SLARY PAC
+0001F7 000000000C                                       ZTOTSAL  DC    PL05'0'                            INITIALIZE TOTAL WA
+0001FC 402020202020206B202020                           EDWD     DC    X'402020202020206B202020'
+000207                                                  TOTALLNE DS    0CL133                                                  
+000207 F0                                               SKIP     DC    CL1'0'                                                  
+000208 404040404040404040                               TFILL1   DC    CL09' '                                                 
+000211 404040404040404040404040404040                   TFILL2   DC    CL15' '                                                 
+000220 5B                                               TDOLLAR  DC    CL1'$'                                                  
+000221 4040404040404040404040                           ATOTAL   DC    CL11' '                                                 
+00022C 4040404040                                       TFILL3   DC    CL5' '                                                 
+000231 E3D6E3C1D340D4D6D5E3C8D3E840E6C1C7C5E240404040   TOTMSG   DC    CL61'TOTAL MONTHLY WAGES'                               
+00026E 4040404040404040404040404040404040404040404040   TFILL4   DC    CL30' '  
+00026E                                                  * FILE SPECS
+00026E                                                  TOTALLNL EQU   *  
+00028C 85                                               OUTAREAL DC    XL1'85'                                             
+00028D 0100000E                                         FSPECI   DC    XL4'0100000E'
+000291 E2C1D3C1D9C9C5E24BC9D5D7E4E3                     FNAMEI   DC    CL14'SALARIES.INPUT'
+00029F 0201000D                                         FSPECO   DC    XL4'0201000D'
+0002A3 D9C5D7D6D9E34BD6E4E3D7E4E3                       FNAMEO   DC    CL13'REPORT.OUTPUT'
+0002A3                                                  R0       EQU   0                                                       
+0002A3                                                  R1       EQU   1                                                       
+0002A3                                                  R2       EQU   2                                                       
+0002A3                                                  R3       EQU   3                                                       
+0002A3                                                  R4       EQU   4                                                       
+0002A3                                                  R5       EQU   5                                                       
+0002A3                                                  R6       EQU   6                                                       
+0002A3                                                  R7       EQU   7                                                       
+0002A3                                                  R8       EQU   8                                                       
+0002A3                                                  R9       EQU   9                                                       
+0002A3                                                  R10      EQU   10                                                      
+0002A3                                                  R11      EQU   11                                                      
+0002A3                                                  R12      EQU   12                                                      
+0002A3                                                  R13      EQU   13                                                      
+0002A3                                                  R14      EQU   14                                                      
+0002A3                                                  R15      EQU   15                                                      
+0002B0 00000000                                         LT001    DC    F'0'
+0002B0                                                           END                                                           
