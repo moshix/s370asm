@@ -23,8 +23,8 @@ import pickle
 #
 #
 # global vars moshix july 19 2021                                                         
-asmver='1.11'
-reldate='July 19 2021'
+asmver='2.01'
+reldate='July 20 2021'
 #
 #assembler directives
 assem_inst_list = [ 'USING',
