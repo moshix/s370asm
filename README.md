@@ -53,6 +53,7 @@ Example program
 <pre>
          PRINT ON,NOGEN
 REPORT   CSECT
+*                                                 EXAMPLE BY MOSHIX
          BALR  R12,0                              SET UP MY                       
          USING *,R12                              BASE REGISTER         
 *---------------------------------------------------------------------*
