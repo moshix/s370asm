@@ -156,9 +156,11 @@ export OUTDD=REPORT.OUTPUT
 </pre>
 
 
-Assembler with the provided asm script. Then run with the provided runasm script, after adapting both for your directory structure. 
+Assemble the example program with the provided <b>asm</b> script. Then run with the provided <b>runasm</b> script, after adapting both for your directory structure. 
 
-Runs correctly on Windoz, Linuchs, FreeBSD and Macoz
+Runs correctly on Windoz, Linuchs, FreeBSD and Macoz.
+
+
 <p><p>
 Moshix
 
