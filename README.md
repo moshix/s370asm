@@ -154,6 +154,12 @@ then export INDD and OUTDD with:
 export INDD=SALARIES.INPUT
 export OUTDD=REPORT.OUTPUT 
 </pre>
+
+
+Assembler with the provided asm script. Then run with the provided runasm script, after adapting both for your directory structure. 
+
+Runs correctly on Windoz, Linuchs, FreeBSD and Macoz
+<p><p>
 Moshix
 
 July 20, 2021
