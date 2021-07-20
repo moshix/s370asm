@@ -43,7 +43,7 @@ then run with the script runasm script, after adpating for your directory struct
 
  Conditional assembly is NOT supported.
 
- Macro definitions are NOT supported.
+ The only macros supported are: WTO, OPEN, CLOSE, GET, PUT
  
 
 Example program
