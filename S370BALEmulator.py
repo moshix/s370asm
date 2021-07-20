@@ -1,4 +1,6 @@
 # 
+# S370BALEmulator V3.R1.M2
+#
 # This file is part of the XXX distribution (https://github.com/xxxx or http://xxx.github.io).
 # Copyright (c) 2021 James Salvino.
 # 
@@ -15,6 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 #
 
+import os
 import sys
 import pickle
 import curses
@@ -2321,6 +2324,10 @@ def SVC():
                 for i in range(0,filename_len):
                     ebyte = instrdata_list[addr+i]
                     filename = filename + chr(int(EBC2ASC[int(ebyte,16)],16))
+                #test if filename is an environment variable
+                ext_filename = os.environ.get(filename)
+                if not ext_filename == None:
+                    filename = ext_filename     #yes, use value of environment variable as filename
                 try:    
                     open_string = 'fh' + file_handle_num + ' = open(filename, rw_dict[rw_indicator])'
                     exec(open_string)

@@ -1,35 +1,22 @@
-*         PRINT ON,NOGEN
-*REPORT   CSECT
+         PRINT ON,NOGEN
+REPORT   CSECT
          BALR  R12,0                              SET UP MY                       
          USING *,R12                              BASE REGISTER         
 *        ST    R13,SAVEA+4                        ENSURE SAVE AREA                
 *        LA    R13,SAVEA                          CHAIN BUILT CORRECTLY. 
 *---------------------------------------------------------------------*
-INOPEN   LA    R0,FNAMEI
-         L     R1,FSPECI
-         SVC   249
-OUOPEN   LA    R0,FNAMEO
-         L     R1,FSPECO
-         SVC   249
+INOPEN   OPEN  (INDCB,INPUT)
+*
+OUOPEN   OPEN  (OUTDCB,OUTPUT)
+*
 * WRITE OUTPUT RECORD
-WTITLE   LA    R0,PTITLE
-         L     R1,FSPECO
-         IC    R1,121                              ***INSERT LEN TO BYTE 3 R1                        
-         SVC   246                                   ********
-         LA    R1,121                                ********PUT LEN IN R1
-         SVC   255                                   ********
+WTITLE   PUT   OUTDCB,PTITLE
+         WTO   PTITLE
 *---------------------------------------------------------------------*
-*READREC GET   INDCB,PAYREC                      READ IN EMPLOYEE REC
-READREC  LA    R0,PAYREC
-         L     R1,FSPECI
-         SVC   247
-IFEOF    C     R15,=F'0'                          IF EOF THEN
-         BE    INCLOS                             GO TO CLOSING
+READREC  GET   INDCB,PAYREC                       READ IN EMPLOYEE REC
 *---------------------------------------------------------------------*
 * PRINT ALSO ON SCREEN 
-         LA    R0,PAYREC
-         LR    R1,R15
-         SVC   255                                OUTPUT ON SCREEN
+         WTO   PAYREC
 * 
 CPYSTUFF MVC   PEMPID,EMPID                                            
          MVC   PEMPLOYE,EMPLOYEE                                       
@@ -37,37 +24,24 @@ CPYSTUFF MVC   PEMPID,EMPID
 *                                                                      
 PACKIT   PACK  ZSALARY,SALARY                     PACK SALARY                     
          AP    ZTOTSAL,ZSALARY                    ADD MONTHLY WAGE TO
-*WRITEPR  PUT   OUTDCB,OUTAREA                    WRITE TO PRINTER
-WRITEPR  LA    R0,OUTAREA
-         L     R1,FSPECO
-         IC    R1,OUTAREAL       
-         SVC   246                                 PUT RECORD TO PC FI
-         B     READREC                             AND REPEAT TILL FILE
+WRITEPR  PUT   OUTDCB,OUTAREA                     WRITE TO PRINTER
+         B     READREC                            AND REPEAT TILL FILE
 *---------------------------------------------------------------------*
 INCLOS   MVC   ATOTAL,EDWD                                              
 *        LA    R1,ATOTAL                                                
          ED    ATOTAL,ZTOTSAL                                           
-*        PUT   OUTDCB,TOTALLNE                    PRINT TOTAL LINE
-         LA    R0,TOTALLNE
-         L     R1,FSPECO
-         IC    R1,TOTALLNL   
-         SVC   246                                PUT TOTALLINE
+         PUT   OUTDCB,TOTALLNE                    PRINT TOTAL LINE
 * PRINT TOTAL ALSO ON SCREEN
-         LA    R0,TOTALLNE
-         LA    R1,133                             ******** PUT LEN IN R1
-         SVC   255
-*CLSALL   CLOSE (INDCB,,OUTDCB)                   WE GET HERE FROM EODAD
-CLSALL   L     R1,FSPECI
-         SVC   248                                CLOSE PC FILE SVC
-         L     R1,FSPECO
-         SVC   248
-*                                      FOR END OF BLOCK ON WGET BUT OK 
-*                                                  TO ALSO CLOSE OUTDCB
+         WTO   TOTALLNE
+*
+CLSALL   CLOSE (INDCB)                            WE GET HERE FROM EODAD
+         CLOSE (OUTDCB)
+*
          BR    R14
-*         LTORG                                                         
+         LTORG                                                         
 *---------------------------------------------------------------------*
-*INDCB    DCB MACRF=GM,DDNAME=INDD,DSORG=PS,EODAD=INCLOS                
-*OUTDCB   DCB MACRF=PM,DDNAME=OUTDD,DSORG=PS                            
+INDCB    DCB   MACRF=GM,DDNAME=INDD,DSORG=PS,EODAD=INCLOS                
+OUTDCB   DCB   MACRF=PM,DDNAME=OUTDD,DSORG=PS                            
 *                          PAYROLL REPORT STRUCTURE                    
 PAYREC   DS    0CL80                              HANDLE FOR THE STRU
 EMPID    DS    CL4                                EMPLOYEE ID                                 
@@ -77,7 +51,10 @@ EMPLOYEE DS    CL21                               NAME OF EMPLOYEE
 SALARY   DS    CL4                                MONTHLY SALARY                              
 TOEND    DS    CL43                               80 BYTES SO FAR                             
 *--------S-T-A-R-T----O-F----O-U-T-P-U-T----S-T-R-U-C-T-U-R-E---------*
-PTITLE   DC    CL121' P A Y R O L L  R E P O R T  -  B I M  C O R P.'  
+PTITLE   DS    0CL121 
+         DC    CL27' P A Y R O L L  R E P O R T'
+         DC    CL20'  -  B I M  C O R P.'
+         DC    CL74' '
 OUTAREA  DS    0CL133
 EMPTY    DC    CL1' '                                                  
 PEMPID   DC    CL4' '                                                  
@@ -100,13 +77,7 @@ ATOTAL   DC    CL11' '
 TFILL3   DC    CL5' '                                                 
 TOTMSG   DC    CL61'TOTAL MONTHLY WAGES'                               
 TFILL4   DC    CL30' '  
-* FILE SPECS
-TOTALLNL EQU   *  
-OUTAREAL DC    XL1'85'                                             
-FSPECI   DC    XL4'0100000E'
-FNAMEI   DC    CL14'SALARIES.INPUT'
-FSPECO   DC    XL4'0201000D'
-FNAMEO   DC    CL13'REPORT.OUTPUT'
+*
 R0       EQU   0                                                       
 R1       EQU   1                                                       
 R2       EQU   2                                                       

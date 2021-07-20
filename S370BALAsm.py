@@ -1,5 +1,5 @@
 # 
-# S370BALAsm V2.R1.M3
+# S370BALAsm V2.R2.M0
 #
 # This file is part of the S370BALAsm distribution.
 # Copyright (c) 2021 James Salvino.
@@ -19,14 +19,19 @@
 
 import sys
 import pickle
+
 #
-# global vars moshix july 19 2021
+#
+# global vars moshix july 19 2021                                                         
 asmver='1.11'
 reldate='July 19 2021'
 #
 #assembler directives
-assem_inst_list = [ 'USING', 
+assem_inst_list = [ 'USING',
                     'DROP',
+                    'CSECT',
+                    'LTORG',
+                    'PRINT',                    
                     'DC', 
                     'DS', 
                     'EQU', 
@@ -167,6 +172,14 @@ extended_mnemonic_inst_dict = {
             'BZR': '8',
             'BNO': '14',
             'BNOR': '14' }   
+
+mvs_macros_list = [ 'WTO',
+                    'DCB',
+                    'OPEN',
+                    'CLOSE',
+                    'GET',
+                    'PUT',
+                    'END' ]
             
 ASC2EBC = ['00', '01', '02', '03', '1A', '09', '1A', '7F', '1A', '1A', '1A', '0B', '0C', '0D', '0E', '0F',    # 00 - 0F
            '10', '11', '12', '13', '3C', '3D', '32', '26', '18', '19', '3F', '27', '1C', '1D', '1E', '1F',    # 10 - 1F
@@ -397,7 +410,10 @@ def handle_DC(spec):
         
     elif spec[0] == 'A':
         if const[0].isalpha():
-            (addr, num_bytes_dict) = symbol_table_dict[const]
+            if isinstance(symbol_table_dict[const],tuple):
+                (addr, num_bytes) = symbol_table_dict[const]
+            else:
+                addr = symbol_table_dict[const]
             const = addr
         if num_bytes > 0:
             byte_array = cvtint2hex(int(const), numbytes=num_bytes)
@@ -716,10 +732,14 @@ def handle_L1L2BDDDBDDD(operands, base_reg):
 #STC   R4,AREA1
 #STC   R4,AREA1+1
 #STC   R4,AREA1(R5)     #using R5 as index reg
-#STC   R4,AREA1+1(R5)   #using R5 as index reg    
+#STC   R4,AREA1+1(R5)   #using R5 as index reg 
+#LA    R4,L'OUTAREA
 def handle_RXBDDD(operands, base_reg):
     if operands.count(',') == 1:
         (R1,oper2) = operands.split(',')
+        if oper2.startswith("L'"):                         #LA    R4,L'OUTAREA            
+            (addr, num_bytes) = symbol_table_dict[oper2[2:]]
+            oper2 = str(num_bytes)
         if R1[0].isalpha():
             R1 = symbol_table_dict[R1]
         R1data = hex(int(R1))[2:].upper()
@@ -842,7 +862,7 @@ if len(sys.argv)-1 > 0:
     except IndexError:
         pass
 else:
-    print('s370 file name missing. Invoke the assembler without .s370 extension in the argument')
+    print('s370 file name missing')
     exit(1)
         
 #open the source code file and create a list from assembler statements    
@@ -852,6 +872,155 @@ source_code_list = [line.rstrip('\n') for line in inputfi]
 #implement my own exception hook to catch assembler errors
 sys.excepthook = my_except_hook 
 
+#--------------------------------------------------------------#
+#macro pre-processor logic
+#
+#iterate over sourcecode
+#expand MVS macros
+
+print('Step 1: Executing Macro Pre-processor Logic')
+
+sl_ctr = 0
+file_handle_suffix = 1
+
+while True:
+    sl = source_code_list[sl_ctr]
+    #print(sl)
+    
+    #handle a comment
+    if sl[0] == '*':
+        sl_ctr = sl_ctr + 1
+        continue
+        
+    mnemonic = sl[9:14].rstrip(' ')
+    
+    if mnemonic in mvs_macros_list:
+        if mnemonic == 'DCB':
+            st = []
+            eodad = ''
+            ddname = ''
+            rwbyte = '0100'
+            source_code_list[sl_ctr] = '*' + source_code_list[sl_ctr]
+            if sl[0] != ' ':
+                stmlab = sl[0:8].rstrip(' ')
+            else:
+                stmlab = ''
+            oper_list = sl[15:75].rstrip(' ').split(',')
+            for operand in oper_list:
+                (name, value) = operand.split('=')
+                if name == 'DDNAME':
+                    ddname = value
+                elif name == 'EODAD':
+                    eodad = value
+                    rwbyte = '0000'
+            spec = str(file_handle_suffix).rjust(2,'0') + rwbyte + hex(len(ddname)).lstrip('0x').rjust(2,'0').upper()
+            file_handle_suffix += 1
+            st.append(stmlab + (9-len(stmlab))*' ' + 'DS    0H')
+            if len(eodad) > 0:
+                st.append(stmlab + 'E'+ (9-(len(stmlab)+1))*' ' + 'DC    A(' + eodad + ')')
+            st.append(stmlab + 'S' +(9-(len(stmlab)+1))*' ' + "DC    XL4'" + spec + "'")
+            st.append(stmlab + 'N' +(9-(len(stmlab)+1))*' ' + 'DC    CL' + str(len(ddname)) + "'" + ddname + "'")
+            for s in st:
+                sl_ctr += 1
+                source_code_list.insert(sl_ctr, s)
+            sl_ctr += 1
+            continue                    
+        elif mnemonic == 'OPEN':
+            st = []
+            source_code_list[sl_ctr] = '*' + source_code_list[sl_ctr]
+            if sl[0] != ' ':
+                stmlab = sl[0:8].rstrip(' ')
+            else:
+                stmlab = ''
+            dcb_field = sl[15:50].rstrip(' ')[1:-1]
+            (dcb, type) = dcb_field.split(',')
+            st.append(stmlab + (9-len(stmlab))*' ' + 'LA    0,' + dcb + 'N')
+            st.append('         L     1,' + dcb + 'S')
+            st.append('         SVC   249')
+            for s in st:
+                sl_ctr += 1
+                source_code_list.insert(sl_ctr, s)
+            sl_ctr += 1
+            continue                    
+        elif mnemonic == 'CLOSE':
+            st = []
+            source_code_list[sl_ctr] = '*' + source_code_list[sl_ctr]
+            if sl[0] != ' ':
+                stmlab = sl[0:8].rstrip(' ')
+            else:
+                stmlab = ''
+            dcb = sl[15:50].rstrip(' ')[1:-1]
+            st.append(stmlab + (9-len(stmlab))*' ' + 'L     1,' + dcb + 'S')
+            st.append('         SVC   248')
+            for s in st:
+                sl_ctr += 1
+                source_code_list.insert(sl_ctr, s)
+            sl_ctr += 1
+            continue        
+        elif mnemonic == 'GET':
+            st = []
+            source_code_list[sl_ctr] = '*' + source_code_list[sl_ctr]
+            if sl[0] != ' ':
+                stmlab = sl[0:8].rstrip(' ')
+            else:
+                stmlab = ''
+            dcb_field = sl[15:50].rstrip(' ')
+            (dcb, inrec) = dcb_field.split(',')
+            st.append(stmlab + (9-len(stmlab))*' ' + 'LA    0,' + inrec)
+            st.append('         L     1,' + dcb + 'S')
+            st.append('         SVC   247')
+            st.append('         SR    0,0')
+            st.append('         L     1,' + dcb + 'E')
+            st.append('         CR    15,0')
+            st.append('         BER   1 ')
+            for s in st:
+                sl_ctr += 1
+                source_code_list.insert(sl_ctr, s)
+            sl_ctr += 1
+            continue        
+        elif mnemonic == 'PUT':
+            st = []
+            source_code_list[sl_ctr] = '*' + source_code_list[sl_ctr]
+            if sl[0] != ' ':
+                stmlab = sl[0:8].rstrip(' ')
+            else:
+                stmlab = ''
+            dcb_field = sl[15:50].rstrip(' ')
+            (dcb, outrec) = dcb_field.split(',')
+            st.append(stmlab + (9-len(stmlab))*' ' + 'LA    0,' + outrec)
+            st.append("         LA    1,L'" + outrec)
+            st.append('         ICM   1,14,' + dcb + 'S')
+            st.append('         SVC   246')
+            for s in st:
+                sl_ctr += 1
+                source_code_list.insert(sl_ctr, s)
+            sl_ctr += 1
+            continue        
+        elif mnemonic == 'WTO':
+            st = []
+            source_code_list[sl_ctr] = '*' + source_code_list[sl_ctr]
+            if sl[0] != ' ':
+                stmlab = sl[0:8].rstrip(' ')
+            else:
+                stmlab = ''
+            data_area = sl[15:50].rstrip(' ')
+            st.append(stmlab + (9-len(stmlab))*' ' + 'LA    0,' + data_area)
+            st.append("         LA    1,L'" + data_area)
+            st.append('         SVC   255')
+            for s in st:
+                sl_ctr += 1
+                source_code_list.insert(sl_ctr, s)
+            sl_ctr += 1
+            continue        
+        elif mnemonic == 'END':
+            break         
+    else:
+        sl_ctr = sl_ctr + 1
+        
+#for sl in source_code_list:
+#    print(sl)
+
+#exit()            
 #--------------------------------------------------------------#
 #pass 1 logic
 #
@@ -863,7 +1032,7 @@ sys.excepthook = my_except_hook
 #replace extended mnemonic branch instructions with BCs
 #
 
-print('Step 1: Executing Pass 1 Logic')
+print('Step 2: Executing Pass 1 Logic')
 
 address_opcode_list = []
 symbol_table_dict = {}
@@ -895,8 +1064,10 @@ while True:
         if mnemonic == 'USING':
             pass
             
-        elif mnemonic == 'DROP':
-            pass
+        elif mnemonic == 'DROP' or mnemonic == 'CSECT' or mnemonic == 'LTORG' or mnemonic == 'PRINT':
+            source_code_list[sl_ctr] = '*' + source_code_list[sl_ctr]
+            sl_ctr = sl_ctr + 1
+            continue
             
         elif mnemonic == 'EQU':
             if sl[15] == '*':
@@ -964,7 +1135,7 @@ if debug:
 #add operand code to address_opcode_list
 #
 
-print('Step 2: Executing Pass 2 Logic')
+print('Step 3: Executing Pass 2 Logic')
 
 sl_ctr = 0
 aol_ctr = 0
@@ -990,7 +1161,7 @@ while True:
             else:
                 pass
             
-        elif mnemonic == 'DROP':
+        elif mnemonic == 'DROP' or mnemonic == 'CSECT' or mnemonic == 'LTORG' or mnemonic == 'PRINT':
             pass
             
         elif mnemonic == 'EQU':
@@ -1052,7 +1223,7 @@ if debug:
 #create the assembler output listing
 #
 
-print('Step 3: Create the assembler output listing')
+print('Step 4: Create the assembler output listing')
 
 #open the assembler output print file    
 outputfi = open(file_name+'.s370PRN', 'w')
@@ -1063,12 +1234,11 @@ display_addr = '000000'
 
 instrdata = []
 work_source_code_list = []
-# modification by moshix    july 17 2021
+# modification by moshix    july 17 2021                                                  
 listing_line = 'S370Asm Assembler         v' + asmver + '                         ' + reldate + '                                      S370 Instruction Set'
 outputfi.write(listing_line + '\n')
 listing_line = ' '
-outputfi.write(listing_line + '\n')
-
+outputfi.write(listing_line + '\n') 
 while True:
     sl = source_code_list[sl_ctr]
 
@@ -1111,7 +1281,7 @@ while True:
 #dictionaries for the S370BALEmu
 #
 
-print('Step 4: Build the required S370BALEmu data structures')
+print('Step 5: Build the required S370BALEmu data structures')
 
 symdict = {}
 source_code_dict = {}
