@@ -1,7 +1,7 @@
 S370Asm assembler by Jim Salvino with some changes by me
 =======================================================
 
-Jim Salvino created an amazing yet surprisingly simple S/370 assembler in Python3. 
+Jim Salvino created an amazing yet surprisingly simple S/370 assembler in Python3. It is probably the best S/370 assembler learning system out there. 
 
 Once he announced it, I immediately started playing with it. We found a few small issues which Jim fixed immediately. 
 
@@ -69,5 +69,5 @@ R15      EQU   15
 
 Moshix
 
-July 19, 2021
+July 20, 2021
 
