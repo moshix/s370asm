@@ -1,3 +1,6 @@
+[![Discord](https://img.shields.io/discord/423767742546575361.svg?label=&logo=discord&logoColor=ffffff&color=7389D8&labelColor=6A7EC2)](https://discord.gg/vpEv3HJ)
+<a href=" https://github.com/moshix/mvs/blob/master/codenotary.com"><img src="https://raw.githubusercontent.com/moshix/mvs/master/secured-by-immudb.svg" width="130px;"/></a>
+
 S370Asm Assembler by Jim Salvino with some mods by me
 =====================================================
 
@@ -164,5 +167,5 @@ Runs correctly on Windoz, Linuchs, FreeBSD and Macoz.
 <p><p>
 Moshix
 
-July 20, 2021
+September 6, 2021
 
